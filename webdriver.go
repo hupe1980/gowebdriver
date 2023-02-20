@@ -90,8 +90,6 @@ func (w *webDriver) newSession(opts SessionOptions) (*Session, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(data))
-
 	session := &Session{}
 	if err := json.Unmarshal(data, session); err != nil {
 		return nil, err
