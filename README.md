@@ -6,7 +6,6 @@
 ## How to use
 ```go
 chromeDriver, err := webdriver.NewChromeDriver("/path/to/chromedriver")
-err := chromeDriver.Start()
 if err != nil {
 	panic(err)
 }
