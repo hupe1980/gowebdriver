@@ -70,3 +70,25 @@ func (c Capabilities) Set(key string, value string) Capabilities {
 	c[key] = value
 	return c
 }
+
+type ChromeOptions map[string]interface{}
+
+func (co ChromeOptions) AddArg(arg string) ChromeOptions {
+	if _, ok := co["args"]; ok {
+		co["args"] = append(co["args"].([]string), arg)
+	} else {
+		co["args"] = []string{arg}
+	}
+
+	return co
+}
+
+func (co ChromeOptions) Binary(binaryLocation string) ChromeOptions {
+	co["binary"] = binaryLocation
+	return co
+}
+
+func (c Capabilities) ChromeOptions(co ChromeOptions) Capabilities {
+	c["goog:chromeOptions"] = co
+	return c
+}
