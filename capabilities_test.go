@@ -7,8 +7,8 @@ import (
 )
 
 func TestCapabilities(t *testing.T) {
-	caps := NewCapabilities()
-	caps.BrowserName("chrome")
+	caps := Capabilities{}
+	caps.SetBrowserName("chrome")
 	assert.Equal(t, "chrome", caps["browserName"])
 }
 

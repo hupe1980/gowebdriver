@@ -2,19 +2,8 @@ package webdriver
 
 type Capabilities map[string]interface{}
 
-// NewCapabilities returns a Capabilities instance with any provided features enabled.
-func NewCapabilities(features ...string) Capabilities {
-	c := Capabilities{}
-
-	for _, feature := range features {
-		c.With(feature)
-	}
-
-	return c
-}
-
-// BrowserName sets the desired browser name.
-func (c Capabilities) BrowserName(name string) Capabilities {
+// SetBrowserName sets the desired browser name.
+func (c Capabilities) SetBrowserName(name string) Capabilities {
 	c["browserName"] = name
 	return c
 }
@@ -36,32 +25,25 @@ type ProxyConfig struct {
 }
 
 // Proxy sets the desired proxy configuration.
-func (c Capabilities) Proxy(p ProxyConfig) Capabilities {
+func (c Capabilities) SetProxy(p ProxyConfig) Capabilities {
 	c["proxy"] = p
 	return c
 }
 
-// BrowserVersion sets the desired browser version.
-func (c Capabilities) BrowserVersion(version string) Capabilities {
+// SetBrowserVersion sets the desired browser version.
+func (c Capabilities) SetBrowserVersion(version string) Capabilities {
 	c["browserVersion"] = version
 	return c
 }
 
-// PlatformName sets the desired browser platform.
-func (c Capabilities) PlatformName(platform string) Capabilities {
+// SetPlatformName sets the desired browser platform.
+func (c Capabilities) SetPlatformName(platform string) Capabilities {
 	c["platformName"] = platform
 	return c
 }
 
-// With enables the provided feature (ex. "acceptInsecureCerts").
-func (c Capabilities) With(feature string) Capabilities {
-	c[feature] = true
-	return c
-}
-
-// Without disables the provided feature (ex. "acceptInsecureCerts").
-func (c Capabilities) Without(feature string) Capabilities {
-	c[feature] = false
+func (c Capabilities) SetAcceptInsecureCerts(acceptInsecureCerts bool) Capabilities {
+	c["acceptInsecureCerts"] = acceptInsecureCerts
 	return c
 }
 
@@ -70,6 +52,10 @@ func (c Capabilities) Set(key string, value string) Capabilities {
 	c[key] = value
 	return c
 }
+
+/****************************************************************************************************************
+ *                                                Chrome Options                                                *
+ ****************************************************************************************************************/
 
 type ChromeOptions map[string]interface{}
 
@@ -83,12 +69,36 @@ func (co ChromeOptions) AddArg(arg string) ChromeOptions {
 	return co
 }
 
-func (co ChromeOptions) Binary(binaryLocation string) ChromeOptions {
-	co["binary"] = binaryLocation
+func (co ChromeOptions) SetBinary(binary string) ChromeOptions {
+	co["binary"] = binary
 	return co
 }
 
-func (c Capabilities) ChromeOptions(co ChromeOptions) Capabilities {
+func (co ChromeOptions) Binary() string {
+	if val, ok := co["binary"]; ok {
+		return val.(string)
+	}
+
+	return ""
+}
+
+func (co ChromeOptions) DebuggerAddress() string {
+	if val, ok := co["debuggerAddress"]; ok {
+		return val.(string)
+	}
+
+	return ""
+}
+
+func (c Capabilities) SetChromeOptions(co ChromeOptions) Capabilities {
 	c["goog:chromeOptions"] = co
 	return c
+}
+
+func (c Capabilities) ChromeOptions() ChromeOptions {
+	if opts, ok := c["goog:chromeOptions"]; ok {
+		return opts.(map[string]interface{})
+	}
+
+	return nil
 }

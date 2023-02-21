@@ -87,8 +87,8 @@ func (d *ChromeDriver) NewSession(optFns ...func(o *SessionOptions)) (*Session, 
 }
 
 func newDefaultChromeDriverCapabilities() Capabilities {
-	caps := NewCapabilities()
-	caps.BrowserName("chrome")
+	caps := Capabilities{}
+	caps.SetBrowserName("chrome")
 
 	return caps
 }
