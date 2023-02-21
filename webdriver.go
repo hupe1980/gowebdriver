@@ -95,6 +95,8 @@ func (w *webDriver) newSession(opts SessionOptions) (*Session, error) {
 		return nil, err
 	}
 
+	session.client = w.client
+
 	return session, nil
 }
 

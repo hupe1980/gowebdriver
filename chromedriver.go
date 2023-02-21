@@ -83,14 +83,7 @@ func (d *ChromeDriver) NewSession(optFns ...func(o *SessionOptions)) (*Session, 
 		fn(&opts)
 	}
 
-	session, err := d.newSession(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	session.client = d.client
-
-	return session, nil
+	return d.newSession(opts)
 }
 
 func newDefaultChromeDriverCapabilities() Capabilities {
