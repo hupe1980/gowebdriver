@@ -1,24 +1,39 @@
 package webdriver
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 )
 
-type webElement struct {
-	ID string `json:"element-6066-11e4-a52e-4f735466cecf"`
-}
-
 type Element struct {
-	ID        string
-	SessionID string
-	client    *RestClient
+	ID        string      `json:"element-6066-11e4-a52e-4f735466cecf"`
+	SessionID string      `json:"-"`
+	client    *RestClient `json:"-"`
 }
 
 /****************************************************************************************************************
  *                                                ELEMENTS                                                      *
  *                             https://www.w3.org/TR/webdriver/#elements                                        *
  ****************************************************************************************************************/
+
+// GetShadowRoot returns a shadow root of the element if there is one or an error.
+func (e *Element) GetShadowRoot() (*ShadowRoot, error) {
+	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/shadow", e.SessionID, e.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	shadowRoot := ShadowRoot{}
+	if err = json.Unmarshal(data, &shadowRoot); err != nil {
+		return nil, err
+	}
+
+	shadowRoot.SessionID = e.SessionID
+	shadowRoot.client = e.client
+
+	return &shadowRoot, err
+}
 
 // FindElement searches for an element on the page, starting from the referenced web element.
 func (e *Element) FindElement(strategy LocatorStrategy, selector string) (*Element, error) {
@@ -30,19 +45,22 @@ func (e *Element) FindElement(strategy LocatorStrategy, selector string) (*Eleme
 		return nil, err
 	}
 
-	webElement := &webElement{}
-	if err := json.Unmarshal(data, webElement); err != nil {
+	element := Element{}
+	if err := json.Unmarshal(data, &element); err != nil {
 		return nil, err
 	}
 
-	return &Element{ID: webElement.ID, SessionID: e.SessionID, client: e.client}, nil
+	element.SessionID = e.SessionID
+	element.client = e.client
+
+	return &element, nil
 }
 
 // FindElements searches for multiple elements on the page, starting from the referenced web element. The located
 // elements will be returned as a WebElement JSON objects. The table below lists the locator
 // strategies that each server should support. Elements should be returned in the order located
 // in the DOM.
-func (e *Element) FindElements(strategy LocatorStrategy, selector string) ([]*Element, error) {
+func (e *Element) FindElements(strategy LocatorStrategy, selector string) ([]Element, error) {
 	data, err := e.client.Post(fmt.Sprintf("/session/%s/elements/%s", e.SessionID, e.ID), &Params{
 		"using": strategy,
 		"value": selector,
@@ -51,14 +69,14 @@ func (e *Element) FindElements(strategy LocatorStrategy, selector string) ([]*El
 		return nil, err
 	}
 
-	webElements := &[]webElement{}
-	if err := json.Unmarshal(data, webElements); err != nil {
+	elements := []Element{}
+	if err := json.Unmarshal(data, &elements); err != nil {
 		return nil, err
 	}
 
-	elements := []*Element{}
-	for _, we := range *webElements {
-		elements = append(elements, &Element{ID: we.ID, SessionID: e.SessionID, client: e.client})
+	for _, element := range elements {
+		element.SessionID = e.SessionID
+		element.client = e.client
 	}
 
 	return elements, nil
@@ -104,8 +122,8 @@ func (e *Element) GetProperty(name string) (string, error) {
 	return value, err
 }
 
-// GetCSS returns the computed value of the given CSS property for the element.
-func (e *Element) GetCSS(name string) (string, error) {
+// GetCSSValue returns the computed value of the given CSS property for the element.
+func (e *Element) GetCSSValue(name string) (string, error) {
 	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/css/%s", e.SessionID, e.ID, name))
 	if err != nil {
 		return "", err
@@ -210,4 +228,17 @@ func (e *Element) SendKeys(text string) error {
  *                              https://www.w3.org/TR/webdriver/#screen-capture                                 *
  ****************************************************************************************************************/
 
-//TODO
+// TakeScreenshot takes a screenshot of the visible region encompassed by the bounding rectangle of an element.
+func (e *Element) TakeScreenshot() ([]byte, error) {
+	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/screenshot", e.SessionID, e.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	var screenshot string
+	if err := json.Unmarshal(data, &screenshot); err != nil {
+		return nil, err
+	}
+
+	return base64.StdEncoding.DecodeString(screenshot)
+}

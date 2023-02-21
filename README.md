@@ -26,5 +26,17 @@ if err = session.NavigateTo("https://golang.org"); err != nil {
 }
 ```
 
+## Take Screenshots
+```go
+data, err := session.TakeScreenshot()
+if err != nil {
+	panic(err)
+}
+
+if err := os.WriteFile("./screenshot.png", data, 0600); err != nil {
+	panic(err)
+}
+```
+
 ## License
 [MIT](LICENCE)

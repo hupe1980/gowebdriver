@@ -1,6 +1,7 @@
 package webdriver
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 )
@@ -126,7 +127,7 @@ func (s *Session) GetTitle() (string, error) {
  *                                 https://www.w3.org/TR/webdriver/#contexts                                    *
  ****************************************************************************************************************/
 
-// Get handle of current window
+// GetWindowHandle gets handle of current window.
 func (s *Session) GetWindowHandle() (string, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/window", s.ID))
 	if err != nil {
@@ -139,19 +140,20 @@ func (s *Session) GetWindowHandle() (string, error) {
 	return handle, err
 }
 
-// Close the current window.
+// CloseWindow closes the current window.
 func (s *Session) CloseWindow() error {
 	_, err := s.client.Delete(fmt.Sprintf("/session/%s/window", s.ID))
 	return err
 }
 
-// Change focus to another window. The window to change focus to may be specified by it's server assigned window handle.
+// SwitchToWindow changes focus to another window. The window to change focus to may be specified
+// by it's server assigned window handle.
 func (s *Session) SwitchToWindow(handle string) error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/window", s.ID), &Params{"handle": handle})
 	return err
 }
 
-// Get all window handles
+// GetWindowHandles gets all window handles.
 func (s *Session) GetWindowHandles() ([]string, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/window", s.ID))
 	if err != nil {
@@ -164,13 +166,13 @@ func (s *Session) GetWindowHandles() ([]string, error) {
 	return handles, err
 }
 
-// Change focus to another frame on the page
+// SwitchToFrame changes focus to another frame on the page.
 func (s *Session) SwitchToFrame(target Element) error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/frame", s.ID), &Params{"id": target.ID})
 	return err
 }
 
-// Change focus to parent frame on the page
+// SwitchToParentFrame changes focus to parent frame on the page.
 func (s *Session) SwitchToParentFrame() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/frame/parent", s.ID), nil)
 	return err
@@ -195,7 +197,7 @@ type WindowRect struct {
 	Height int `json:"height"`
 }
 
-// Get the size and position on the screen of the operating system window
+// GetWindowRect gets the size and position on the screen of the operating system window.
 func (s *Session) GetWindowRect() (*WindowRect, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/window/rect", s.ID))
 	if err != nil {
@@ -208,7 +210,7 @@ func (s *Session) GetWindowRect() (*WindowRect, error) {
 	return windowRect, err
 }
 
-// Set the size and position on the screen of the operating system window
+// SetWindowRect sets the size and position on the screen of the operating system window.
 func (s *Session) SetWindowRect(windowRect *WindowRect) error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/window/rect", s.ID), &Params{
 		"x":      windowRect.X,
@@ -220,19 +222,19 @@ func (s *Session) SetWindowRect(windowRect *WindowRect) error {
 	return err
 }
 
-// Maximizes the current window
+// MaximizeWindow maximizes the current window.
 func (s *Session) MaximizeWindow() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/window/maximize", s.ID), nil)
 	return err
 }
 
-// Minimizes the current window
+// MinimizeWindow minimizes the current window.
 func (s *Session) MinimizeWindow() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/window/minimize", s.ID), nil)
 	return err
 }
 
-// This command increases Current window to Full-Screen
+// FullscreenWindow increases current window to Full-Screen.
 func (s *Session) FullscreenWindow() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/window/fullscreen", s.ID), nil)
 	return err
@@ -243,7 +245,7 @@ func (s *Session) FullscreenWindow() error {
  *                                 https://www.w3.org/TR/webdriver/#elements                                    *
  ****************************************************************************************************************/
 
-// Search for an element on the page, starting from the document root.
+// FindElement searches for an element on the page, starting from the document root.
 func (s *Session) FindElement(strategy LocatorStrategy, selector string) (*Element, error) {
 	data, err := s.client.Post(fmt.Sprintf("/session/%s/element", s.ID), &Params{
 		"using": strategy,
@@ -253,19 +255,22 @@ func (s *Session) FindElement(strategy LocatorStrategy, selector string) (*Eleme
 		return nil, err
 	}
 
-	webElement := &webElement{}
-	if err := json.Unmarshal(data, webElement); err != nil {
+	element := Element{}
+	if err := json.Unmarshal(data, &element); err != nil {
 		return nil, err
 	}
 
-	return &Element{ID: webElement.ID, SessionID: s.ID, client: s.client}, nil
+	element.SessionID = s.ID
+	element.client = s.client
+
+	return &element, nil
 }
 
-// Search for multiple elements on the page, starting from the document root. The located
-// elements will be returned as a WebElement JSON objects. The table below lists the locator
+// FindElements searches for multiple elements on the page, starting from the document root. The
+// located elements will be returned as a WebElement JSON objects. The table below lists the locator
 // strategies that each server should support. Elements should be returned in the order located
 // in the DOM.
-func (s *Session) FindElements(strategy LocatorStrategy, selector string) ([]*Element, error) {
+func (s *Session) FindElements(strategy LocatorStrategy, selector string) ([]Element, error) {
 	data, err := s.client.Post(fmt.Sprintf("/session/%s/elements", s.ID), &Params{
 		"using": strategy,
 		"value": selector,
@@ -274,32 +279,35 @@ func (s *Session) FindElements(strategy LocatorStrategy, selector string) ([]*El
 		return nil, err
 	}
 
-	webElements := &[]webElement{}
-	if err := json.Unmarshal(data, webElements); err != nil {
+	elements := []Element{}
+	if err := json.Unmarshal(data, &elements); err != nil {
 		return nil, err
 	}
 
-	elements := []*Element{}
-	for _, we := range *webElements {
-		elements = append(elements, &Element{ID: we.ID, SessionID: s.ID, client: s.client})
+	for _, element := range elements {
+		element.SessionID = s.ID
+		element.client = s.client
 	}
 
 	return elements, nil
 }
 
-// Get the element on the page that currently has focus.
+// GetActiveElement gets the element on the page that currently has focus.
 func (s *Session) GetActiveElement() (*Element, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/element/active", s.ID))
 	if err != nil {
 		return nil, err
 	}
 
-	webElement := &webElement{}
-	if err := json.Unmarshal(data, webElement); err != nil {
+	element := Element{}
+	if err := json.Unmarshal(data, &element); err != nil {
 		return nil, err
 	}
 
-	return &Element{ID: webElement.ID, SessionID: s.ID, client: s.client}, nil
+	element.SessionID = s.ID
+	element.client = s.client
+
+	return &element, nil
 }
 
 /****************************************************************************************************************
@@ -307,7 +315,7 @@ func (s *Session) GetActiveElement() (*Element, error) {
  *                                 https://www.w3.org/TR/webdriver/#document                                    *
  ****************************************************************************************************************/
 
-// Returns a string serialization of the DOM of the current browsing context active document.
+// GetPageSource returns a string serialization of the DOM of the current browsing context active document.
 func (s *Session) GetPageSource() (string, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/source", s.ID))
 	if err != nil {
@@ -320,8 +328,8 @@ func (s *Session) GetPageSource() (string, error) {
 	return source, err
 }
 
-// Inject a snippet of JavaScript into the page for execution in the context of the
-// currently selected frame. The executed script is assumed to be synchronous and
+// ExecuteScript injects a snippet of JavaScript into the page for execution in the context
+// of the currently selected frame. The executed script is assumed to be synchronous and
 // the result of evaluating the script is returned to the client.
 func (s *Session) ExecuteScript(script string, args []interface{}) ([]byte, error) {
 	data, err := s.client.Post(fmt.Sprintf("/session/%s/execute/sync", s.ID), &Params{
@@ -353,7 +361,7 @@ type Cookie struct {
 	Path string `json:"path"`
 
 	// The domain the cookie is visible to.
-	// Defaults to the current browsing context’s document’s URL domain if omitted when adding a cookie.
+	// Defaults to the current browsing context's document's URL domain if omitted when adding a cookie.
 	Domain string `json:"domain"`
 
 	// Whether the cookie is a secure cookie. Defaults to false if omitted when adding a cookie.
@@ -367,8 +375,8 @@ type Cookie struct {
 	Expiry int `json:"expiry"`
 }
 
-// Returns all cookies associated with the address of the current browsing context’s active
-// document.
+// GetCookies returns all cookies associated with the address of the current browsing context's
+// active document.
 func (s *Session) GetCookies() ([]*Cookie, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/cookie", s.ID))
 	if err != nil {
@@ -381,7 +389,7 @@ func (s *Session) GetCookies() ([]*Cookie, error) {
 	return cookies, err
 }
 
-// Returns cookie based on the cookie name
+// GetCookie returns cookie based on the cookie name
 func (s *Session) GetCookie(name string) (*Cookie, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/cookie/%s", s.ID, name))
 	if err != nil {
@@ -394,17 +402,29 @@ func (s *Session) GetCookie(name string) (*Cookie, error) {
 	return cookie, err
 }
 
-// Adds a single cookie to the cookie store associated with the active document’s address.
-// TODO
+// AddCookie adds a single cookie to the cookie store associated with the active document's address.
+func (s *Session) AddCookie(cookie Cookie) error {
+	_, err := s.client.Post(fmt.Sprintf("/session/%s/execute/sync", s.ID), &Params{
+		"name":     cookie.Name,
+		"value":    cookie.Value,
+		"path":     cookie.Path,
+		"domain":   cookie.Domain,
+		"secure":   cookie.Secure,
+		"httpOnly": cookie.HTTPOnly,
+		"expiry":   cookie.Expiry,
+	})
 
-// Delete a cookie based on its name
+	return err
+}
+
+// DeleteCookie deletes a cookie based on its name
 func (s *Session) DeleteCookie(name string) error {
 	_, err := s.client.Delete(fmt.Sprintf("/session/%s/cookie/%s", s.ID, name))
 	return err
 }
 
-// Delete all cookies associated with the address of the current browsing context’s active
-// document.
+// DeleteCookies deletes all cookies associated with the address of the current browsing context's
+// active document.
 func (s *Session) DeleteCookies() error {
 	_, err := s.client.Delete(fmt.Sprintf("/session/%s/cookie", s.ID))
 	return err
@@ -415,6 +435,17 @@ func (s *Session) DeleteCookies() error {
  *                                  https://www.w3.org/TR/webdriver/#actions                                    *
  ****************************************************************************************************************/
 
+type ActionType string
+
+const (
+	ActionTypePause       ActionType = "pause"
+	ActionTypeKeyDown     ActionType = "keyDown"
+	ActionTypeKeyUp       ActionType = "keyUp"
+	ActionTypePointerMove ActionType = "pointerMove"
+	ActionTypePointerUp   ActionType = "pointerUp"
+	ActionTypePointerDown ActionType = "pointerDown"
+)
+
 // TODO
 
 /****************************************************************************************************************
@@ -422,19 +453,19 @@ func (s *Session) DeleteCookies() error {
  *                               https://www.w3.org/TR/webdriver/#user-prompts                                  *
  ****************************************************************************************************************/
 
-// Dismiss the alert in current page
+// DismissAlert dismisses the alert in current page.
 func (s *Session) DismissAlert() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/alert/dismiss", s.ID), nil)
 	return err
 }
 
-// Accept the alert in current page
+// AcceptAlert accepts the alert in current page.
 func (s *Session) AcceptAlert() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/alert/accept", s.ID), nil)
 	return err
 }
 
-// Returns the text from an alert
+// GetAlertText returns the text from an alert.
 func (s *Session) GetAlertText() (string, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/alert/text", s.ID))
 	if err != nil {
@@ -447,7 +478,7 @@ func (s *Session) GetAlertText() (string, error) {
 	return text, err
 }
 
-// Sets the text field of a prompt to the given value.
+// SendAlertText sets the text field of a prompt to the given value.
 func (s *Session) SendAlertText(text string) error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/alert/text", s.ID), &Params{
 		"text": text,
@@ -459,6 +490,26 @@ func (s *Session) SendAlertText(text string) error {
 /****************************************************************************************************************
  *                                              SCREEN CAPTURE                                                  *
  *                              https://www.w3.org/TR/webdriver/#screen-capture                                 *
+ ****************************************************************************************************************/
+
+// TakeScreenshot takes a screenshot of the top-level browsing context's viewport.
+func (s *Session) TakeScreenshot() ([]byte, error) {
+	data, err := s.client.Get(fmt.Sprintf("/session/%s/screenshot", s.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	var screenshot string
+	if err := json.Unmarshal(data, &screenshot); err != nil {
+		return nil, err
+	}
+
+	return base64.StdEncoding.DecodeString(screenshot)
+}
+
+/****************************************************************************************************************
+ *                                              PRINT                                                           *
+ *                              https://www.w3.org/TR/webdriver/#print-page                                     *
  ****************************************************************************************************************/
 
 // TODO
