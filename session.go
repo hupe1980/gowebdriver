@@ -30,7 +30,7 @@ type Timeouts struct {
 	Implicit int `json:"implicit"`
 }
 
-// Gets timeout durations associated with the current session.
+// GetTimeouts gets timeout durations associated with the current session.
 func (s *Session) GetTimeouts() (*Timeouts, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/timeouts", s.ID))
 	if err != nil {
@@ -43,7 +43,7 @@ func (s *Session) GetTimeouts() (*Timeouts, error) {
 	return timeouts, err
 }
 
-// Configure the amount of time that a particular type of operation can execute for before
+// SetTimeouts configures the amount of time that a particular type of operation can execute for before
 // they are aborted and a Timeout error is returned to the client.
 func (s *Session) SetTimeouts(timeouts *Timeouts) error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/timeouts", s.ID), &Params{
@@ -60,7 +60,7 @@ func (s *Session) SetTimeouts(timeouts *Timeouts) error {
  *                                 https://www.w3.org/TR/webdriver/#sessions                                    *
  ****************************************************************************************************************/
 
-// Close the session.
+// Close closes the session.
 func (s *Session) Close() error {
 	_, err := s.client.Delete(fmt.Sprintf("/session/%s", s.ID))
 	return err
@@ -71,13 +71,13 @@ func (s *Session) Close() error {
  *                                https://www.w3.org/TR/webdriver/#navigation                                   *
  ****************************************************************************************************************/
 
-// Navigate to a new URL.
+// NavigateTo navigates to a new URL.
 func (s *Session) NavigateTo(url string) error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/url", s.ID), &Params{"url": url})
 	return err
 }
 
-// Get current page URL.
+// GetCurrentURL gets current page URL.
 func (s *Session) GetCurrentURL() (string, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/url", s.ID))
 	if err != nil {
@@ -90,25 +90,25 @@ func (s *Session) GetCurrentURL() (string, error) {
 	return url, err
 }
 
-// Navigate to previous url from history.
+// Back navigates to previous url from history.
 func (s *Session) Back() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/back", s.ID), nil)
 	return err
 }
 
-// Navigate forward to next url from history.
+// Forward navigates forward to next url from history.
 func (s *Session) Forward() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/forward", s.ID), nil)
 	return err
 }
 
-// Refresh the current page.
+// Refresh refreshes the current page.
 func (s *Session) Refresh() error {
 	_, err := s.client.Post(fmt.Sprintf("/session/%s/refresh", s.ID), nil)
 	return err
 }
 
-// Get the current page title.
+// GetTitle gets the current page title.
 func (s *Session) GetTitle() (string, error) {
 	data, err := s.client.Get(fmt.Sprintf("/session/%s/title", s.ID))
 	if err != nil {

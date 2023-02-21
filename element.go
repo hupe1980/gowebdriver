@@ -20,7 +20,7 @@ type Element struct {
  *                             https://www.w3.org/TR/webdriver/#elements                                        *
  ****************************************************************************************************************/
 
-// Search for an element on the page, starting from the referenced web element.
+// FindElement searches for an element on the page, starting from the referenced web element.
 func (e *Element) FindElement(strategy LocatorStrategy, selector string) (*Element, error) {
 	data, err := e.client.Post(fmt.Sprintf("/session/%s/element/%s", e.SessionID, e.ID), &Params{
 		"using": strategy,
@@ -38,7 +38,7 @@ func (e *Element) FindElement(strategy LocatorStrategy, selector string) (*Eleme
 	return &Element{ID: webElement.ID, SessionID: e.SessionID, client: e.client}, nil
 }
 
-// Search for multiple elements on the page, starting from the referenced web element. The located
+// FindElements searches for multiple elements on the page, starting from the referenced web element. The located
 // elements will be returned as a WebElement JSON objects. The table below lists the locator
 // strategies that each server should support. Elements should be returned in the order located
 // in the DOM.
@@ -64,7 +64,7 @@ func (e *Element) FindElements(strategy LocatorStrategy, selector string) ([]*El
 	return elements, nil
 }
 
-// Determines if the referenced element is selected or not.
+// IsSelected determines if the referenced element is selected or not.
 // This operation only makes sense on input elements of the Checkbox- and Radio Button states, or on option elements.
 func (e *Element) IsSelected() (bool, error) {
 	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/selected", e.SessionID, e.ID))
@@ -78,9 +78,9 @@ func (e *Element) IsSelected() (bool, error) {
 	return selected, err
 }
 
-// Returns the attribute value of the referenced web element.
+// GetAttribute returns the attribute value of the referenced web element.
 func (e *Element) GetAttribute(name string) (string, error) {
-	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/attribure/%s", e.SessionID, e.ID, name))
+	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/attribute/%s", e.SessionID, e.ID, name))
 	if err != nil {
 		return "", err
 	}
@@ -91,7 +91,7 @@ func (e *Element) GetAttribute(name string) (string, error) {
 	return value, err
 }
 
-// Returns the property of the referenced web element.
+// GetProperty returns the property of the referenced web element.
 func (e *Element) GetProperty(name string) (string, error) {
 	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/property/%s", e.SessionID, e.ID, name))
 	if err != nil {
@@ -104,8 +104,8 @@ func (e *Element) GetProperty(name string) (string, error) {
 	return value, err
 }
 
-// Returns the computed value of the given CSS property for the element.
-func (e *Element) GetCSSValue(name string) (string, error) {
+// GetCSS returns the computed value of the given CSS property for the element.
+func (e *Element) GetCSS(name string) (string, error) {
 	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/css/%s", e.SessionID, e.ID, name))
 	if err != nil {
 		return "", err
@@ -117,7 +117,7 @@ func (e *Element) GetCSSValue(name string) (string, error) {
 	return value, err
 }
 
-// Returns the visible text for the element.
+// GetText returns the visible text for the element.
 func (e *Element) GetText() (string, error) {
 	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/text", e.SessionID, e.ID))
 	if err != nil {
@@ -130,7 +130,7 @@ func (e *Element) GetText() (string, error) {
 	return text, err
 }
 
-// Returns the tagName of a Element
+// GetTagName returns the tagName of an element
 func (e *Element) GetTagName() (string, error) {
 	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/name", e.SessionID, e.ID))
 	if err != nil {
@@ -171,7 +171,7 @@ func (e *Element) GetRect() (*ElementRect, error) {
 	return elementRect, err
 }
 
-// Determines if the referenced element is enabled or not.
+// IsEnabled determines if the referenced element is enabled or not.
 func (e *Element) IsEnabled() (bool, error) {
 	data, err := e.client.Get(fmt.Sprintf("/session/%s/element/%s/enabled", e.SessionID, e.ID))
 	if err != nil {
@@ -184,19 +184,19 @@ func (e *Element) IsEnabled() (bool, error) {
 	return enabled, err
 }
 
-// Click on an element.
+// Click clicks on an element.
 func (e *Element) Click() error {
 	_, err := e.client.Post(fmt.Sprintf("/session/%s/element/%s/click", e.SessionID, e.ID), nil)
 	return err
 }
 
-// Clear content of an element.
+// Clear clears content of an element.
 func (e *Element) Clear() error {
 	_, err := e.client.Post(fmt.Sprintf("/session/%s/element/%s/clear", e.SessionID, e.ID), nil)
 	return err
 }
 
-// Send a sequence of key strokes to an element.
+// SendKeys sends a sequence of key strokes to an element.
 func (e *Element) SendKeys(text string) error {
 	_, err := e.client.Post(fmt.Sprintf("/session/%s/element/%s/value", e.SessionID, e.ID), &Params{
 		"text": text,
