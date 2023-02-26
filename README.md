@@ -38,5 +38,22 @@ if err := os.WriteFile("./screenshot.png", data, 0600); err != nil {
 }
 ```
 
+## BiDi Session
+```go
+biDiSession := session.BiDiSession()
+
+bc, err := biDiSession.NewBrowsingContext(bidi.BrowsingContextTypeWindow, nil)
+if err != nil {
+	panic(err)
+}
+
+defer bc.Close()
+
+navigation, err := bc.Navigate("https://golang.org", bidi.BrowsingContextReadinessStateComplete)
+if err != nil {
+	panic(err)
+}
+```
+
 ## License
 [MIT](LICENCE)

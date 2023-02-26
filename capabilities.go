@@ -72,6 +72,19 @@ func (c Capabilities) Set(key string, value string) Capabilities {
 
 type ChromeOptions map[string]interface{}
 
+func (c Capabilities) SetChromeOptions(co ChromeOptions) Capabilities {
+	c["goog:chromeOptions"] = co
+	return c
+}
+
+func (c Capabilities) ChromeOptions() ChromeOptions {
+	if opts, ok := c["goog:chromeOptions"]; ok {
+		return opts.(map[string]interface{})
+	}
+
+	return nil
+}
+
 func (co ChromeOptions) AddArg(arg string) ChromeOptions {
 	if _, ok := co["args"]; ok {
 		co["args"] = append(co["args"].([]string), arg)
@@ -101,17 +114,4 @@ func (co ChromeOptions) DebuggerAddress() string {
 	}
 
 	return ""
-}
-
-func (c Capabilities) SetChromeOptions(co ChromeOptions) Capabilities {
-	c["goog:chromeOptions"] = co
-	return c
-}
-
-func (c Capabilities) ChromeOptions() ChromeOptions {
-	if opts, ok := c["goog:chromeOptions"]; ok {
-		return opts.(map[string]interface{})
-	}
-
-	return nil
 }
