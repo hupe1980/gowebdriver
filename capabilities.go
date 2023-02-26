@@ -47,6 +47,19 @@ func (c Capabilities) SetAcceptInsecureCerts(acceptInsecureCerts bool) Capabilit
 	return c
 }
 
+func (c Capabilities) SetWebSocketURL(webSocketURL bool) Capabilities {
+	c["webSocketUrl"] = webSocketURL
+	return c
+}
+
+func (c Capabilities) WebSocketURL() string {
+	if val, ok := c["webSocketUrl"]; ok {
+		return val.(string)
+	}
+
+	return ""
+}
+
 // Sets an arbitrary key-value pair
 func (c Capabilities) Set(key string, value string) Capabilities {
 	c[key] = value

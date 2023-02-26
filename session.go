@@ -4,12 +4,23 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
+	"github.com/hupe1980/gowebdriver/bidi"
 )
 
 type Session struct {
 	ID           string       `json:"sessionId"`
 	Capabilities Capabilities `json:"capabilities"`
 	client       *RestClient
+	biDiSession  *bidi.Session
+}
+
+func (s *Session) IsBiDiSession() bool {
+	return s.Capabilities.WebSocketURL() != ""
+}
+
+func (s *Session) BiDiSession() *bidi.Session {
+	return s.biDiSession
 }
 
 /****************************************************************************************************************

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/hupe1980/gowebdriver/bidi"
 )
 
 type WebDriver interface {
@@ -16,6 +18,8 @@ type WebDriver interface {
 
 	// Query the server status
 	Status() (*Status, error)
+
+	Port() int
 
 	// Create a new session
 	NewSession(optFns ...func(o *SessionOptions)) (*Session, error)
@@ -30,7 +34,38 @@ type Options struct {
 }
 
 type webDriver struct {
-	client *RestClient
+	port    int
+	service *Service
+	timeout time.Duration
+	client  *RestClient
+}
+
+func (w *webDriver) Start() error {
+	if err := w.service.Start(); err != nil {
+		return err
+	}
+
+	if err := w.service.WaitForBoot(w.timeout, func() bool {
+		status, err := w.Status()
+		if err != nil {
+			return false
+		}
+
+		return status.Ready
+	}); err != nil {
+		_ = w.service.Stop()
+		return err
+	}
+
+	return nil
+}
+
+func (w *webDriver) Stop() error {
+	if err := w.service.Stop(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type Status struct {
@@ -69,6 +104,10 @@ func (w *webDriver) DeleteSession(id string) error {
 	return err
 }
 
+func (w *webDriver) Port() int {
+	return w.port
+}
+
 type SessionOptions struct {
 	AlwaysMatch Capabilities
 	FirstMatch  []Capabilities
@@ -96,6 +135,15 @@ func (w *webDriver) newSession(opts SessionOptions) (*Session, error) {
 	}
 
 	session.client = w.client
+
+	if session.IsBiDiSession() {
+		biDiSession, err := bidi.New(session.Capabilities.WebSocketURL(), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		session.biDiSession = biDiSession
+	}
 
 	return session, nil
 }

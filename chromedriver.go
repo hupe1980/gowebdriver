@@ -5,12 +5,9 @@ import (
 	"time"
 )
 
-type ChromeDriver struct {
+type chromeDriver struct {
 	webDriver
-	path    string
-	port    int
-	service *Service
-	timeout time.Duration
+	path string
 }
 
 func NewChromeDriver(path string, optFns ...func(o *Options)) (WebDriver, error) {
@@ -32,49 +29,19 @@ func NewChromeDriver(path string, optFns ...func(o *Options)) (WebDriver, error)
 		opts.Port = port
 	}
 
-	service := NewService(path, []string{fmt.Sprintf("--port=%d", opts.Port)})
-
-	cd := &ChromeDriver{
-		path:    path,
-		port:    opts.Port,
-		service: service,
-		timeout: opts.BootTimeout,
+	cd := &chromeDriver{
+		path: path,
 	}
 
+	cd.port = opts.Port
+	cd.service = NewService(path, []string{fmt.Sprintf("--port=%d", opts.Port)})
+	cd.timeout = opts.BootTimeout
 	cd.client = NewRestClient(fmt.Sprintf("http://127.0.0.1:%d", opts.Port))
 
 	return cd, nil
 }
 
-func (d *ChromeDriver) Start() error {
-	if err := d.service.Start(); err != nil {
-		return err
-	}
-
-	if err := d.service.WaitForBoot(d.timeout, func() bool {
-		status, err := d.Status()
-		if err != nil {
-			return false
-		}
-
-		return status.Ready
-	}); err != nil {
-		_ = d.service.Stop()
-		return err
-	}
-
-	return nil
-}
-
-func (d *ChromeDriver) Stop() error {
-	if err := d.service.Stop(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (d *ChromeDriver) NewSession(optFns ...func(o *SessionOptions)) (*Session, error) {
+func (d *chromeDriver) NewSession(optFns ...func(o *SessionOptions)) (*Session, error) {
 	opts := SessionOptions{
 		AlwaysMatch: newDefaultChromeDriverCapabilities(),
 	}
@@ -89,6 +56,7 @@ func (d *ChromeDriver) NewSession(optFns ...func(o *SessionOptions)) (*Session, 
 func newDefaultChromeDriverCapabilities() Capabilities {
 	caps := Capabilities{}
 	caps.SetBrowserName("chrome")
+	caps.SetWebSocketURL(true)
 
 	return caps
 }
