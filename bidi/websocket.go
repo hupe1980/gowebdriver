@@ -17,7 +17,7 @@ func (ws *WebSocket) Connect(ctx context.Context, wsURL string, header http.Head
 		return fmt.Errorf("duplicated connection: %s", wsURL)
 	}
 
-	c, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+	c, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{ //nolint bodyclose
 		HTTPHeader: header,
 	})
 	if err != nil {

@@ -15,7 +15,7 @@ const (
 type BrowsingContext struct {
 	ID     string              `json:"context"`
 	Type   BrowsingContextType `json:"-"`
-	client *BiDiClient         `json:"-"`
+	client *Client             `json:"-"`
 }
 
 // func (b *BrowsingContext) CaptureScreenshot() ([]byte, error) {

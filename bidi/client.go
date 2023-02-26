@@ -44,7 +44,7 @@ type Event struct {
 // EventCallback represents a callback event, associated with a method.
 type EventCallback func(params json.RawMessage)
 
-type BiDiClient struct {
+type Client struct {
 	count     uint64
 	pending   sync.Map    // pending requests
 	event     chan *Event // events from browser
@@ -52,15 +52,15 @@ type BiDiClient struct {
 	callbacks map[string]EventCallback
 }
 
-func NewBiDiClient() *BiDiClient {
-	return &BiDiClient{
+func NewBiDiClient() *Client {
+	return &Client{
 		event:     make(chan *Event),
 		ws:        &WebSocket{},
 		callbacks: map[string]EventCallback{},
 	}
 }
 
-func (c *BiDiClient) Start(wsURL string, header http.Header) error {
+func (c *Client) Start(wsURL string, header http.Header) error {
 	if err := c.ws.Connect(context.Background(), wsURL, header); err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ type result struct {
 	err error
 }
 
-func (c *BiDiClient) Call(ctx context.Context, method string, params interface{}) ([]byte, error) {
+func (c *Client) Call(ctx context.Context, method string, params interface{}) ([]byte, error) {
 	command := &Command{
 		ID:     int(c.newID()),
 		Method: method,
@@ -115,16 +115,16 @@ func (c *BiDiClient) Call(ctx context.Context, method string, params interface{}
 	}
 }
 
-func (c *BiDiClient) Close() error {
+func (c *Client) Close() error {
 	return c.ws.Close()
 }
 
-func (c *BiDiClient) CallbackEvent(event string, cb EventCallback) {
+func (c *Client) CallbackEvent(event string, cb EventCallback) {
 	c.callbacks[event] = cb
 }
 
 // Read messages coming from the browser via the websocket.
-func (c *BiDiClient) readMessages() {
+func (c *Client) readMessages() {
 	defer close(c.event)
 
 	for {
@@ -180,12 +180,12 @@ func (c *BiDiClient) readMessages() {
 }
 
 // Process events coming from the browser via the websocket.
-func (c *BiDiClient) processEvents() {
+func (c *Client) processEvents() {
 	for event := range c.event {
 		fmt.Println(string(event.Params))
 	}
 }
 
-func (c *BiDiClient) newID() uint64 {
+func (c *Client) newID() uint64 {
 	return atomic.AddUint64(&c.count, 1)
 }

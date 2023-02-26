@@ -8,7 +8,7 @@ import (
 
 type Session struct {
 	ID     string
-	client *BiDiClient `json:"-"`
+	client *Client `json:"-"`
 }
 
 func New(wsURL string, header http.Header) (*Session, error) {
