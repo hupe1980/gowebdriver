@@ -24,9 +24,12 @@ const (
 )
 
 type baseLogEntry struct {
-	Type      LogType   `json:"type"`
-	Level     LogLevel  `json:"level"`
-	Timestamp Timestamp `json:"timestamp"`
+	Type       LogType    `json:"type"`
+	Level      LogLevel   `json:"level"`
+	Source     Source     `json:"source"`
+	Text       string     `json:"text"`
+	Timestamp  Timestamp  `json:"timestamp"`
+	StackTrace StackTrace `json:"stackTrace"`
 }
 
 type GenericLogEntry struct {
@@ -35,7 +38,8 @@ type GenericLogEntry struct {
 
 type ConsoleLogEntry struct {
 	baseLogEntry
-	Method string `json:"method"`
+	Method string      `json:"method"`
+	Args   interface{} `json:"args"`
 }
 
 type JavascriptLogEntry struct {
