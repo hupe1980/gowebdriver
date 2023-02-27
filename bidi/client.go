@@ -42,7 +42,7 @@ type Event struct {
 }
 
 // EventCallback represents a callback event, associated with a method.
-type EventCallback func(params json.RawMessage)
+type EventCallback func(params json.RawMessage) error
 
 type Client struct {
 	count     uint64
@@ -119,8 +119,8 @@ func (c *Client) Close() error {
 	return c.ws.Close()
 }
 
-func (c *Client) CallbackEvent(event string, cb EventCallback) {
-	c.callbacks[event] = cb
+func (c *Client) CallbackEvent(method string, cb EventCallback) {
+	c.callbacks[method] = cb
 }
 
 // Read messages coming from the browser via the websocket.
@@ -182,7 +182,11 @@ func (c *Client) readMessages() {
 // Process events coming from the browser via the websocket.
 func (c *Client) processEvents() {
 	for event := range c.event {
-		fmt.Println(string(event.Params))
+		if cb, ok := c.callbacks[event.Method]; ok {
+			if err := cb(event.Params); err != nil {
+				panic(err)
+			}
+		}
 	}
 }
 

@@ -17,12 +17,12 @@ defer chromeDriver.Stop()
 
 session, err := chromeDriver.NewSession()
 if err != nil {
-    panic(err)
+	panic(err)
 }
 defer session.Close()
 
 if err = session.NavigateTo("https://golang.org"); err != nil {
-	 panic(err)
+	panic(err)
 }
 ```
 
@@ -40,7 +40,10 @@ if err := os.WriteFile("./screenshot.png", data, 0600); err != nil {
 
 ## BiDi Session
 ```go
-biDiSession := session.BiDiSession()
+biDiSession, err := session.BiDiSession()
+if err != nil {
+	panic(err)
+}
 
 bc, err := biDiSession.NewBrowsingContext(bidi.BrowsingContextTypeWindow, nil)
 if err != nil {
@@ -51,6 +54,20 @@ defer bc.Close()
 
 navigation, err := bc.Navigate("https://golang.org", bidi.BrowsingContextReadinessStateComplete)
 if err != nil {
+	panic(err)
+}
+```
+
+## Subscribe  
+```go
+biDiSession.OnLogEntry(&bidi.OnLogEntryHandler{
+	LogTypeConsoleHandlerFunc: func(entry *bidi.ConsoleLogEntry) error {
+		fmt.Println(entry)
+		return nil
+	},
+})
+
+if err := biDiSession.Subscribe([]string{"log.entryAdded"}); err != nil {
 	panic(err)
 }
 ```

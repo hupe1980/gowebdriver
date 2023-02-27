@@ -3,6 +3,7 @@ package webdriver
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/hupe1980/gowebdriver/bidi"
@@ -19,8 +20,12 @@ func (s *Session) IsBiDiSession() bool {
 	return s.Capabilities.WebSocketURL() != ""
 }
 
-func (s *Session) BiDiSession() *bidi.Session {
-	return s.biDiSession
+func (s *Session) BiDiSession() (*bidi.Session, error) {
+	if !s.IsBiDiSession() {
+		return nil, errors.New("BiDi not supported")
+	}
+
+	return s.biDiSession, nil
 }
 
 /****************************************************************************************************************
