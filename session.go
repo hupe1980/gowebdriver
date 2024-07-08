@@ -300,9 +300,9 @@ func (s *Session) FindElements(strategy LocatorStrategy, selector string) ([]Ele
 		return nil, err
 	}
 
-	for _, element := range elements {
-		element.SessionID = s.ID
-		element.client = s.client
+	for index, _ := range elements {
+		elements[index].SessionID = s.ID
+		elements[index].client = s.client
 	}
 
 	return elements, nil
