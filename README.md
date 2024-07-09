@@ -60,7 +60,7 @@ if err != nil {
 
 ## Subscribe  
 ```go
-biDiSession.OnLogEntry(&bidi.OnLogEntryHandler{
+biDiSession.OnLogEntryAdded(&bidi.OnLogEntryHandler{
 	LogTypeConsoleHandlerFunc: func(entry *bidi.ConsoleLogEntry) error {
 		fmt.Println(entry)
 		return nil

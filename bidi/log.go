@@ -52,7 +52,7 @@ type OnLogEntryHandler struct {
 	LogTypeJavascriptHandlerFunc func(entry *JavascriptLogEntry) error
 }
 
-func (s *Session) OnLogEntry(handler *OnLogEntryHandler) {
+func (s *Session) OnLogEntryAdded(handler *OnLogEntryHandler) {
 	s.client.CallbackEvent("log.entryAdded", func(params json.RawMessage) error {
 		type entry struct {
 			Type LogType `json:"type"`
@@ -70,6 +70,7 @@ func (s *Session) OnLogEntry(handler *OnLogEntryHandler) {
 				if err := json.Unmarshal(params, &e); err != nil {
 					return err
 				}
+
 				return handler.LogTypeTextHandlerFunc(e)
 			}
 		case LogTypeConsole:
@@ -78,6 +79,7 @@ func (s *Session) OnLogEntry(handler *OnLogEntryHandler) {
 				if err := json.Unmarshal(params, &e); err != nil {
 					return err
 				}
+
 				return handler.LogTypeConsoleHandlerFunc(e)
 			}
 		case LogTypeJavascript:
@@ -86,6 +88,7 @@ func (s *Session) OnLogEntry(handler *OnLogEntryHandler) {
 				if err := json.Unmarshal(params, &e); err != nil {
 					return err
 				}
+
 				return handler.LogTypeJavascriptHandlerFunc(e)
 			}
 		}
