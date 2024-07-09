@@ -170,12 +170,14 @@ func (c *Client) readMessages() {
 		if err = json.Unmarshal(data, &apiErr); err == nil && apiErr.ErrorCode != "" {
 			val.(func(result))(result{nil, apiErr})
 			continue
-		} else if err = json.Unmarshal(data, &apiRes); err == nil {
+		}
+
+		if err = json.Unmarshal(data, &apiRes); err == nil {
 			val.(func(result))(result{apiRes.Result, nil})
 			continue
-		} else {
-			panic(err)
 		}
+
+		panic(err)
 	}
 }
 
