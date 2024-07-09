@@ -45,7 +45,7 @@ func (s *ShadowRoot) FindElements(strategy LocatorStrategy, selector string) ([]
 		return nil, err
 	}
 
-	for index, _ := range elements {
+	for index := range elements {
 		elements[index].SessionID = s.ID
 		elements[index].client = s.client
 	}
